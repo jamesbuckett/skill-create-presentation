@@ -1,0 +1,39 @@
+{
+  "skill_name": "skill-html-to-presentation",
+  "evals": [
+    {
+      "id": 0,
+      "name": "build-page-then-convert",
+      "prompt": "Build me a one-page primer on OAuth 2.1 authorization-code flow with PKCE, aimed at backend engineers — include a comparison table of the legacy OAuth grant types and a short token-request code sample. When the page is done, turn it into a presentation I can run at a brown-bag talk.",
+      "expected_output": "An index.html built to the style guide, then a presentation.html generated from it: a single self-contained file with ids slide-1..slide-N, a title slide, an agenda, one slide per h2 section in source order, the comparison table and the code sample each on their own slide, speaker notes on every slide, a closing slide with branding links, and validate.mjs exiting clean. Per-slide screenshots captured (or the blocked screenshot step reported as a limitation).",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "existing-page-to-deck",
+      "prompt": "this repo has my SPIFFE explainer as index.html — index.html to deck please. keep the section order exactly as the page has it and put speaker notes on every slide.",
+      "expected_output": "A presentation.html generated from the provided page without touching index.html: title slide from the h1 + lede, agenda listing the six h2 sections in order, sections never reordered, the comparison table on its own slide, the spire-server code block on its own slide, the 9-step rollout list split into continuation slides titled (1/2) and (2/2) with 6 or fewer bullets each, an <aside class=\"notes\"> on every slide, and validate.mjs exiting clean.",
+      "files": [
+        { "src": "fixtures/docs-page.html", "dest": "index.html" }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "dense-page-with-print-handout",
+      "prompt": "make a slide deck from this page. it's dense, so split anything that won't fit — tables included — and I also want to print it as a one-slide-per-page handout for the meeting.",
+      "expected_output": "A presentation.html from the provided page where no slide exceeds 6 bullets / ~80 words (overflow becomes continuation slides), the table gets its own slide (split by columns or rows if it doesn't fit), the deck template's @media print one-slide-per-page layout is intact, and both validate.mjs and the per-slide screenshot pass are clean, with the dark set captured and inspected.",
+      "files": [
+        { "src": "fixtures/docs-page.html", "dest": "index.html" }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "pptx-request-skips-skill",
+      "prompt": "convert ./index.html into a PowerPoint deck (.pptx) for the exec review on Friday",
+      "expected_output": "The skill is NOT used: no presentation.html is generated. Claude routes to a PowerPoint-producing approach (e.g. a pptx library or tool) or explains what it needs to produce a .pptx, because this skill's output is a single-file HTML deck, not PowerPoint/Keynote/PDF.",
+      "files": [
+        { "src": "fixtures/docs-page.html", "dest": "index.html" }
+      ]
+    }
+  ]
+}

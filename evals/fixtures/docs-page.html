@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zero-Trust Service Authentication with SPIFFE</title>
+  <meta name="description" content="Why network location stopped being an identity, and how SPIFFE/SPIRE gives every workload a short-lived, attestable identity instead.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Noto+Sans+Mono&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #FAFAFA; --surface: #FFFFFF; --text: #0A0A0A; --text-muted: #6B7280;
+      --border: #E5E7EB; --border-strong: #D1D5DB;
+      --accent: #4F46E5;
+      --accent-hover: color-mix(in srgb, var(--accent) 88%, black);
+      --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--bg));
+      --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+      --space-6: 32px; --space-7: 48px; --space-8: 64px; --space-9: 96px;
+      --font-sans: "Noto Sans", -apple-system, sans-serif;
+      --font-mono: "Noto Sans Mono", ui-monospace, monospace;
+    }
+    [data-theme="dark"] {
+      --bg: #0B0B0C; --surface: #161618; --text: #F5F5F5; --text-muted: #9CA3AF;
+      --border: #27272A; --border-strong: #3F3F46;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-sans); font-size: 18px; line-height: 1.65; }
+    .container { max-width: 820px; margin-inline: auto; padding-inline: var(--space-5); }
+    section { padding-block: var(--space-8); border-top: 1px solid var(--border); }
+    .hero { text-align: center; padding-block: var(--space-9) var(--space-8); }
+    .lede { color: var(--text-muted); max-width: 64ch; margin-inline: auto; margin-top: var(--space-5); }
+    p + p { margin-top: var(--space-4); }
+    pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: var(--space-5); font-family: var(--font-mono); font-size: 14px; overflow-x: auto; }
+    code { font-family: var(--font-mono); }
+    table { width: 100%; border-collapse: collapse; background: var(--surface); }
+    th, td { text-align: left; padding: var(--space-4); border-bottom: 1px solid var(--border); vertical-align: top; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .branding { display: flex; justify-content: center; gap: var(--space-2); list-style: none; padding: 0; margin-top: var(--space-6); }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="#">SPIFFE Primer</a>
+      <nav class="nav" aria-label="Primary">
+        <a href="#why">Why</a>
+        <a href="#concepts">Concepts</a>
+        <a href="#compare">Comparison</a>
+        <button id="theme-toggle" type="button" aria-label="Toggle theme">Theme</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <h1>Zero-Trust Service Authentication with SPIFFE</h1>
+        <p class="lede">Network location stopped being an identity the day workloads started moving. SPIFFE gives every workload a short-lived, attestable identity instead — and SPIRE issues it automatically.</p>
+        <ul class="branding" aria-label="Personal links">
+          <li><a href="https://github.com/jamesbuckett">GitHub</a></li>
+          <li><a href="https://twitter.com/jamesbuckett">Twitter / X</a></li>
+          <li><a href="https://www.linkedin.com/in/jamesbuckett">LinkedIn</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="why">
+      <div class="container">
+        <h2>Why network location stopped working</h2>
+        <p>Perimeter security assumed that anything inside the network was trustworthy: an IP address on the right subnet was, in effect, a credential. Flat corporate networks, VPN sprawl, and lateral movement in every major breach post-mortem showed how little that assumption holds.</p>
+        <p>Modern platforms made it worse in a mundane way: workloads simply stopped sitting still. Containers reschedule across nodes, autoscalers create and destroy replicas by the minute, and a single service may span two clouds and an on-prem cluster before lunch.</p>
+        <p>Zero-trust flips the default. Every request is authenticated and authorized on its own merits, and the unit of identity moves from the network segment to the workload itself.</p>
+        <ul>
+          <li>IP addresses and subnets are routing facts, not identities.</li>
+          <li>Perimeters concentrate risk: one breach buys lateral movement everywhere.</li>
+          <li>Shared secrets sprawl — copied into CI variables, laptops, and tickets.</li>
+          <li>Audit needs a stable identity that survives rescheduling and autoscaling.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="concepts">
+      <div class="container">
+        <h2>Core concepts</h2>
+        <p>SPIFFE (Secure Production Identity Framework For Everyone) is a CNCF-graduated specification for workload identity. It defines what an identity looks like and how a workload obtains one; SPIRE is the reference implementation that does the issuing.</p>
+
+        <h3>SPIFFE IDs and SVIDs</h3>
+        <p>Every workload gets a SPIFFE ID — a URI such as <code>spiffe://prod.example.com/billing/api</code> — carried inside an SVID (SPIFFE Verifiable Identity Document), issued either as an X.509 certificate or a JWT.</p>
+        <ul>
+          <li>SVIDs are short-lived and rotated automatically — no secret to leak, copy, or forget.</li>
+          <li>Workloads fetch SVIDs over the local Workload API socket; no bootstrap secret is deployed with the code.</li>
+          <li>Issuance rests on attestation: the platform proves what the workload is before any document is signed.</li>
+        </ul>
+
+        <h3>Trust domains and federation</h3>
+        <p>A trust domain is the unit of issuance and verification — typically one per environment or organisation, with its own signing keys and trust bundle.</p>
+        <ul>
+          <li>Verification is anchored in the trust bundle, not in a global public CA.</li>
+          <li>Federation exchanges bundles between trust domains, so
+            <code>spiffe://prod.example.com</code> workloads can verify partners without sharing keys.
+            <ul>
+              <li>Bundles are fetched over an authenticated endpoint and refreshed on rotation.</li>
+              <li>Cross-domain trust stays explicit, scoped, and revocable.</li>
+            </ul>
+          </li>
+          <li>Rotation and revocation are domain-local operations — no industry-wide CRL required.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="compare">
+      <div class="container">
+        <h2>SPIFFE against the alternatives</h2>
+        <p>The common alternatives each solve part of the problem. The comparison that matters is credential lifetime, rotation effort, and what an attacker gets when one leaks.</p>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Approach</th>
+              <th scope="col">Credential form</th>
+              <th scope="col">Rotation</th>
+              <th scope="col">Blast radius on leak</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Static API keys</th>
+              <td>Long-lived shared secret</td>
+              <td>Manual, rarely done</td>
+              <td>Full impersonation until someone notices</td>
+            </tr>
+            <tr>
+              <th scope="row">Hand-rolled mTLS</th>
+              <td>Per-service certificates</td>
+              <td>Manual PKI ceremony, outage-prone</td>
+              <td>Scoped, but revocation lags for weeks</td>
+            </tr>
+            <tr>
+              <th scope="row">Cloud IAM only</th>
+              <td>Provider-native principals</td>
+              <td>Automatic within one cloud</td>
+              <td>Stops at the provider boundary</td>
+            </tr>
+            <tr>
+              <th scope="row">SPIFFE / SPIRE</th>
+              <td>Short-lived X.509 or JWT SVID</td>
+              <td>Automatic, minutes-scale</td>
+              <td>Minutes of exposure, platform-neutral</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="implement">
+      <div class="container">
+        <h2>Implementing with SPIRE</h2>
+        <p>SPIRE runs as a server (the signing authority for the trust domain) plus an agent on every node. The agent attests workloads and serves the Workload API. Registration entries map attestation facts to SPIFFE IDs:</p>
+        <pre><code class="language-bash"># Register the billing API: any workload in namespace "billing"
+# running under service account "api" on an attested node gets this ID.
+spire-server entry create \
+    -spiffeID  spiffe://prod.example.com/billing/api \
+    -parentID  spiffe://prod.example.com/spire/agent/k8s_psat/prod/node \
+    -selector  k8s:ns:billing \
+    -selector  k8s:sa:api \
+    -x509SVIDTTL 3600
+
+# Verify what the workload actually receives over the Workload API.
+spire-agent api fetch x509 -socketPath /run/spire/sockets/agent.sock</code></pre>
+        <p>From the workload's point of view there is no secret to manage: it asks the local socket for its current SVID and gets rotation for free. Envoy, service meshes, and most gRPC stacks consume the Workload API directly.</p>
+      </div>
+    </section>
+
+    <section id="rollout">
+      <div class="container">
+        <h2>Rollout phases</h2>
+        <p>A SPIFFE rollout succeeds or fails on sequencing. The phases below are the order that avoids both a big-bang cutover and a permanent pilot.</p>
+        <ol>
+          <li>Inventory service-to-service flows and their current credential types.</li>
+          <li>Stand up the SPIRE server with an HA datastore and offline-backed signing keys.</li>
+          <li>Deploy agents to one non-production cluster and verify node attestation.</li>
+          <li>Register a pilot service pair and issue SVIDs alongside existing credentials.</li>
+          <li>Move the pilot pair to mTLS with SVID verification in permissive mode.</li>
+          <li>Enforce SVID-only authentication for the pilot pair and measure failure modes.</li>
+          <li>Expand registration entries service by service, deleting static secrets as you go.</li>
+          <li>Federate the production trust domain with partner or multi-cloud domains.</li>
+          <li>Alert on SVID issuance anomalies and expiring registration entries.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="takeaways">
+      <div class="container">
+        <h2>Key takeaways</h2>
+        <ul>
+          <li>Identity must attach to the workload, not the network path in front of it.</li>
+          <li>Short-lived, attested SVIDs remove the secret-distribution problem instead of managing it.</li>
+          <li>Trust domains keep issuance local and make cross-organisation trust explicit via federation.</li>
+          <li>Roll out alongside existing credentials in permissive mode; enforce only after the metrics are boring.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>&copy; 2026 James Buckett</span>
+      <span>Built with <code>skill-style-guide</code></span>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.setAttribute('data-theme', stored ?? (prefersDark ? 'dark' : 'light'));
+      document.getElementById('theme-toggle')?.addEventListener('click', () => {
+        const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+      });
+    })();
+  </script>
+</body>
+</html>

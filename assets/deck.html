@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Presentation Title — Replace Me</title>
+  <meta name="description" content="One-line description of this deck. Replace with the source page's meta description.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Noto+Sans+Mono&display=swap" rel="stylesheet">
+
+  <style>
+    /* ------------------------------------------------------------------
+       Design tokens — identical to skill-style-guide's palette and spacing
+       contract. Edit values only by syncing with that skill's template;
+       this deck must stay token-compatible. Swap --accent to one of the
+       curated alternatives; do not introduce a second accent.
+       ------------------------------------------------------------------ */
+    :root {
+      /* Light palette (default) */
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --text: #0A0A0A;
+      --text-muted: #6B7280;
+      --border: #E5E7EB;
+      --border-strong: #D1D5DB;
+
+      /* Pick exactly ONE accent. Alternatives commented for reference. */
+      /* --accent: #2563EB; */  /* restrained blue */
+      --accent: #4F46E5;        /* indigo (default) */
+      /* --accent: #059669; */  /* emerald */
+      /* --accent: #EA580C; */  /* warm orange */
+      --accent-hover: color-mix(in srgb, var(--accent) 88%, black);
+      --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--bg));
+
+      /* Categorical (data-viz) palette. ROYGBIV for charts, multi-series
+         diagrams, or taxonomy badges only. Do NOT use for CTAs, headings,
+         links, or chrome — the one-accent rule above still applies. */
+      --cat-1: #DC2626;  /* red */
+      --cat-2: #EA580C;  /* orange */
+      --cat-3: #CA8A04;  /* yellow */
+      --cat-4: #16A34A;  /* green */
+      --cat-5: #2563EB;  /* blue */
+      --cat-6: #4F46E5;  /* indigo */
+      --cat-7: #7C3AED;  /* violet */
+
+      /* Spacing scale: 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 96 */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 24px;
+      --space-6: 32px;
+      --space-7: 48px;
+      --space-8: 64px;
+      --space-9: 96px;
+
+      /* Type */
+      --font-sans: "Noto Sans", -apple-system, BlinkMacSystemFont, "Inter", "Geist", "Segoe UI", Roboto, sans-serif;
+      --font-mono: "Noto Sans Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      /* Deck type ramp — sized for the fixed 1280x720 design space, which
+         the stage scales as one unit. Do not use viewport-relative units
+         inside slides; they would fight the stage scaling. */
+      --fs-deck-h1: 64px;
+      --fs-deck-h2: 44px;
+      --fs-deck-h3: 30px;
+      --fs-deck-body: 24px;
+      --fs-deck-small: 18px;
+      --fs-deck-mono: 20px;
+      --leading-body: 1.5;
+      --leading-tight: 1.15;
+      --tracking-tight: -0.02em;
+
+      /* Layout */
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow-sm: 0 1px 2px rgba(10, 10, 10, 0.04);
+      --shadow: 0 1px 3px rgba(10, 10, 10, 0.06), 0 1px 2px rgba(10, 10, 10, 0.04);
+      --transition: 180ms ease;
+      --transition-slide: 200ms ease;
+
+      /* 16:9 design space. The engine scales this to fit the viewport. */
+      --deck-w: 1280px;
+      --deck-h: 720px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0B0B0C;
+      --surface: #161618;
+      --text: #F5F5F5;
+      --text-muted: #9CA3AF;
+      --border: #27272A;
+      --border-strong: #3F3F46;
+      --accent-soft: color-mix(in srgb, var(--accent) 18%, var(--bg));
+      /* Categorical palette — lifted for near-black backgrounds. */
+      --cat-1: #F87171;
+      --cat-2: #FB923C;
+      --cat-3: #FACC15;
+      --cat-4: #4ADE80;
+      --cat-5: #60A5FA;
+      --cat-6: #818CF8;
+      --cat-7: #A78BFA;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    /* ------------------------------------------------------------------
+       Reset and base
+       ------------------------------------------------------------------ */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      overflow: hidden; /* the stage is the viewport; overlays scroll internally */
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: var(--fs-deck-body);
+      line-height: var(--leading-body);
+      -webkit-font-smoothing: antialiased;
+      transition: background-color var(--transition), color var(--transition);
+    }
+    h1, h2, h3, h4 {
+      font-weight: 700;
+      letter-spacing: var(--tracking-tight);
+      line-height: var(--leading-tight);
+      margin: 0;
+    }
+    p { margin: 0; }
+    code, pre, kbd { font-family: var(--font-mono); font-size: var(--fs-deck-mono); }
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      transition: color var(--transition);
+    }
+    a:hover { color: var(--accent-hover); }
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    /* The stage receives programmatic focus (a keyboard sink when overlays
+       close); it isn't an interactive control, so no ring on it. */
+    .stage:focus-visible { outline: none; }
+
+    /* ------------------------------------------------------------------
+       Deck header — theme toggle + personal branding badges. Fixed chrome,
+       unscaled, hidden in print.
+       ------------------------------------------------------------------ */
+    .deck-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      padding: var(--space-2) var(--space-5);
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: saturate(180%) blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-tight);
+      color: var(--text);
+    }
+    .brand-mark {
+      display: inline-grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+    }
+    .header-links {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .icon-button {
+      display: inline-grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+      transition: background-color var(--transition), border-color var(--transition);
+    }
+    .icon-button:hover { background: var(--surface); border-color: var(--border-strong); }
+    .icon-button svg { width: 18px; height: 18px; }
+    a.icon-button { color: var(--text-muted); }
+    a.icon-button:hover { color: var(--text); }
+    [data-theme="light"] #icon-moon { display: block; }
+    [data-theme="light"] #icon-sun { display: none; }
+    [data-theme="dark"]  #icon-moon { display: none; }
+    [data-theme="dark"]  #icon-sun  { display: block; }
+
+    /* ------------------------------------------------------------------
+       Stage — a fixed 1280x720 canvas centered in the viewport and scaled
+       as one unit, so the deck letterboxes on mismatched windows. The
+       engine sets --deck-scale and --notes-shift from JS on resize.
+       ------------------------------------------------------------------ */
+    .stage {
+      position: fixed;
+      left: 50%;
+      top: calc(50% - var(--notes-shift, 0px));
+      width: var(--deck-w);
+      height: var(--deck-h);
+      transform: translate(-50%, -50%) scale(var(--deck-scale, 1));
+    }
+
+    /* ------------------------------------------------------------------
+       Slides — absolutely stacked; only .is-current is visible. The fade
+       stays at 200ms and dies entirely under prefers-reduced-motion.
+       No entrance animations.
+       ------------------------------------------------------------------ */
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-8);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity var(--transition-slide), visibility 0s 200ms;
+    }
+    .slide.is-current {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity var(--transition-slide);
+    }
+
+    .slide-kicker {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: var(--space-3);
+    }
+    .slide-title { font-size: var(--fs-deck-h2); margin-bottom: var(--space-6); }
+    .slide-body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+    }
+
+    /* Bullets — the workhorse. Content rules cap these at 6 per slide.
+       ol.bullets keeps source numbering (use start="N" on continuations). */
+    ul.bullets, ol.bullets {
+      margin: 0;
+      padding-left: var(--space-6);
+    }
+    ul.bullets li, ol.bullets li { padding-left: var(--space-2); }
+    ul.bullets li + li, ol.bullets li + li { margin-top: var(--space-4); }
+    ul.bullets li::marker { color: var(--accent); }
+    ol.bullets li::marker {
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 20px;
+    }
+    ul.bullets ul {
+      margin-top: var(--space-3);
+      padding-left: var(--space-5);
+      font-size: var(--fs-deck-small);
+      color: var(--text-muted);
+    }
+    ul.bullets ul li + li { margin-top: var(--space-2); }
+    ul.bullets ul li::marker { color: var(--text-muted); }
+    .slide-body strong { font-weight: 700; }
+    .slide-body code {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0 var(--space-1);
+      font-size: 20px;
+    }
+    /* Inside <pre> the inline-code pill must not apply — the block carries
+       the chrome, the lines stay bare. */
+    .slide-body pre code {
+      background: transparent;
+      border: 0;
+      padding: 0;
+      font-size: inherit;
+    }
+
+    /* Title + closing slides */
+    .slide-title-page, .slide-closing {
+      justify-content: center;
+      align-items: flex-start;
+      gap: var(--space-6);
+    }
+    .slide-title-page h1 { font-size: var(--fs-deck-h1); max-width: 20ch; }
+    .slide-closing h2 { font-size: var(--fs-deck-h1); }
+    .deck-lede {
+      font-size: 28px;
+      line-height: 1.4;
+      color: var(--text-muted);
+      max-width: 44ch;
+    }
+    .deck-meta {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      color: var(--text-muted);
+    }
+
+    /* Personal branding row — same pattern as the style guide template. */
+    .branding {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin: 0;
+      list-style: none;
+      padding: 0;
+    }
+    .branding a {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 16px;
+      transition: color var(--transition), border-color var(--transition);
+    }
+    .branding a:hover { color: var(--text); border-color: var(--border-strong); }
+    .branding svg { width: 16px; height: 16px; }
+
+    /* Agenda */
+    ol.agenda {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+    }
+    ol.agenda.agenda-2col { grid-template-columns: 1fr 1fr; column-gap: var(--space-7); }
+    ol.agenda li {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-4);
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-tight);
+    }
+    ol.agenda .agenda-num {
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--accent);
+    }
+
+    /* ------------------------------------------------------------------
+       Deck controls — prev/next, counter, key hints. Fixed chrome,
+       unscaled, hidden in print. Sits above the notes panel when open.
+       ------------------------------------------------------------------ */
+    .deck-controls {
+      position: fixed;
+      right: var(--space-5);
+      bottom: calc(var(--space-5) + var(--notes-h, 0px));
+      z-index: 15;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2);
+      background: color-mix(in srgb, var(--bg) 85%, transparent);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      transition: bottom var(--transition);
+    }
+    .deck-controls .icon-button:disabled {
+      opacity: 0.35;
+      cursor: default;
+      background: transparent;
+      border-color: var(--border);
+    }
+    #slide-counter {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--text-muted);
+      padding-inline: var(--space-2);
+      min-width: 64px;
+      text-align: center;
+    }
+    .key-hint {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      padding-inline: var(--space-2);
+      border-left: 1px solid var(--border);
+    }
+    @media (max-width: 719px) { .key-hint { display: none; } }
+
+    /* ------------------------------------------------------------------
+       Overview grid — toggled with O or Escape. A keyboard-accessible
+       card per slide; Enter jumps, Escape closes.
+       ------------------------------------------------------------------ */
+    .overview {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      background: var(--bg);
+      overflow-y: auto;
+      padding: var(--space-8) var(--space-6) var(--space-6);
+    }
+    .overview-head {
+      max-width: 1280px;
+      margin: 0 auto var(--space-5);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-4);
+    }
+    .overview-head h2 { font-size: 24px; }
+    .overview-head p { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); }
+    .overview-grid {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: var(--space-4);
+    }
+    .ov-card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-2);
+      min-height: 96px;
+      padding: var(--space-4);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .ov-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+    .ov-card[aria-current="true"] { border-color: var(--accent); }
+    .ov-card[aria-current="true"] .ov-num { color: var(--accent); }
+    .ov-num { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); }
+    .ov-title { font-size: 15px; font-weight: 700; line-height: 1.35; letter-spacing: var(--tracking-tight); }
+    body:not(.overview-open) .overview { display: none; }
+    body.overview-open .stage { visibility: hidden; }
+
+    /* ------------------------------------------------------------------
+       Speaker notes — <aside class="notes"> inside each slide, hidden in
+       the deck, mirrored into a readable unscaled bottom panel on N.
+       ------------------------------------------------------------------ */
+    .slide .notes { display: none; }
+    body.notes-open { --notes-h: 24vh; }
+    .notes-panel {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 24vh;
+      z-index: 12;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: var(--space-4) var(--space-6);
+      overflow-y: auto;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    body:not(.notes-open) .notes-panel { display: none; }
+    .notes-panel .notes-label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: var(--space-2);
+    }
+    .notes-panel p { margin: 0; }
+    .notes-panel p + p { margin-top: var(--space-2); }
+    .notes-panel ul { margin: 0; padding-left: var(--space-5); }
+    .notes-panel .notes-empty { color: var(--text-muted); }
+
+    /* ------------------------------------------------------------------
+       Print — one slide per page, chrome removed, light palette forced.
+       With notes mode on (press N before printing), notes append below
+       each slide and pages may flow onto a second sheet.
+       ------------------------------------------------------------------ */
+    @page { size: 13.333in 7.5in; margin: 0; }
+    @media print {
+      /* Force the light palette so a dark-toggled deck doesn't print ink-heavy. */
+      :root, [data-theme="dark"] {
+        --bg: #FFFFFF;
+        --surface: #FFFFFF;
+        --text: #0A0A0A;
+        --text-muted: #6B7280;
+        --border: #E5E7EB;
+        --border-strong: #D1D5DB;
+      }
+      body { overflow: visible; }
+      .deck-header, .deck-controls, .overview, .notes-panel { display: none !important; }
+      .stage {
+        position: static;
+        width: auto;
+        height: auto;
+        transform: none;
+      }
+      .slide {
+        position: relative;
+        inset: auto;
+        width: var(--deck-w);
+        height: var(--deck-h);
+        margin: 0 auto;
+        opacity: 1 !important;
+        visibility: visible !important;
+        page-break-after: always;
+        break-after: page;
+        overflow: hidden;
+      }
+      .slide:last-child { page-break-after: auto; break-after: auto; }
+      body.notes-open .slide { height: auto; min-height: var(--deck-h); overflow: visible; }
+      body.notes-open .slide .notes {
+        display: block;
+        margin-top: var(--space-5);
+        padding-top: var(--space-4);
+        border-top: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: var(--fs-deck-small);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="deck-header">
+    <span class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <!-- Lucide: square -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+      </span>
+      <span class="deck-name">Presentation Title</span>
+    </span>
+    <div class="header-links">
+      <a class="icon-button" href="https://github.com/jamesbuckett" rel="noopener noreferrer" target="_blank" aria-label="GitHub" title="GitHub">
+        <!-- Lucide: github -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      </a>
+      <a class="icon-button" href="https://twitter.com/jamesbuckett" rel="noopener noreferrer" target="_blank" aria-label="Twitter / X" title="Twitter / X">
+        <!-- Lucide: twitter (x glyph) -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l11.733 16h4.267l-11.733 -16z"/><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"/></svg>
+      </a>
+      <a class="icon-button" href="https://www.linkedin.com/in/jamesbuckett" rel="noopener noreferrer" target="_blank" aria-label="LinkedIn" title="LinkedIn">
+        <!-- Lucide: linkedin -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+      </a>
+      <button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle theme" title="Toggle theme">
+        <!-- Lucide: moon -->
+        <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <!-- Lucide: sun -->
+        <svg id="icon-sun"  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="stage" id="stage" tabindex="-1" aria-label="Presentation slides">
+    <!-- SLIDES:BEGIN — replace the placeholder slides below with the deck
+         planned from outline.json. Rules: ids must be slide-1..slide-N in
+         order; every slide keeps its <aside class="notes">; pull CSS for
+         table / code / two-column / divider slides from
+         references/slide-components.md. -->
+
+    <section class="slide slide-title-page" id="slide-1" data-title="Title">
+      <h1>Presentation Title — Replace Me</h1>
+      <p class="deck-lede">One-sentence summary of the source page, taken from its meta description or hero lede. Never invent a thesis the page doesn't state.</p>
+      <p class="deck-meta">James Buckett &middot; Month Year</p>
+      <ul class="branding" aria-label="Personal links">
+        <li><a href="https://github.com/jamesbuckett" rel="noopener noreferrer" target="_blank">
+          <!-- Lucide: github -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          GitHub
+        </a></li>
+        <li><a href="https://twitter.com/jamesbuckett" rel="noopener noreferrer" target="_blank">
+          <!-- Lucide: twitter (x glyph) -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l11.733 16h4.267l-11.733 -16z"/><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"/></svg>
+          Twitter / X
+        </a></li>
+        <li><a href="https://www.linkedin.com/in/jamesbuckett" rel="noopener noreferrer" target="_blank">
+          <!-- Lucide: linkedin -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          LinkedIn
+        </a></li>
+      </ul>
+      <aside class="notes">
+        <p>Opening beat: why this topic, why this audience, why now. One sentence each.</p>
+      </aside>
+    </section>
+
+    <section class="slide" id="slide-2" data-title="Agenda">
+      <p class="slide-kicker">Agenda</p>
+      <h2 class="slide-title">What this deck covers</h2>
+      <div class="slide-body">
+        <ol class="agenda">
+          <li><span class="agenda-num">01</span> First h2 section from the source page</li>
+          <li><span class="agenda-num">02</span> Second h2 section</li>
+          <li><span class="agenda-num">03</span> Third h2 section</li>
+        </ol>
+      </div>
+      <aside class="notes">
+        <p>One agenda item per h2 section, in source order. Seven or more items: add the agenda-2col class.</p>
+      </aside>
+    </section>
+
+    <section class="slide" id="slide-3" data-title="Content slide">
+      <p class="slide-kicker">Section name</p>
+      <h2 class="slide-title">Content slide heading</h2>
+      <div class="slide-body">
+        <ul class="bullets">
+          <li>Condense each source paragraph to one bullet that keeps its claim.</li>
+          <li>Maximum six bullets or roughly eighty words per slide.</li>
+          <li>Overflow becomes a continuation slide titled "Heading (2/3)".</li>
+        </ul>
+      </div>
+      <aside class="notes">
+        <p>Speaker detail lives here, not on the slide. Toggle with N.</p>
+      </aside>
+    </section>
+
+    <section class="slide slide-closing" id="slide-4" data-title="Closing">
+      <p class="slide-kicker">Thanks</p>
+      <h2>Thank you</h2>
+      <p class="deck-lede">One-line takeaway from the source page's conclusion.</p>
+      <ul class="branding" aria-label="Personal links">
+        <li><a href="https://github.com/jamesbuckett" rel="noopener noreferrer" target="_blank">
+          <!-- Lucide: github -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          GitHub
+        </a></li>
+        <li><a href="https://twitter.com/jamesbuckett" rel="noopener noreferrer" target="_blank">
+          <!-- Lucide: twitter (x glyph) -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l11.733 16h4.267l-11.733 -16z"/><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"/></svg>
+          Twitter / X
+        </a></li>
+        <li><a href="https://www.linkedin.com/in/jamesbuckett" rel="noopener noreferrer" target="_blank">
+          <!-- Lucide: linkedin -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          LinkedIn
+        </a></li>
+      </ul>
+      <aside class="notes">
+        <p>Closing beat: restate the one-line takeaway and invite questions.</p>
+      </aside>
+    </section>
+
+    <!-- SLIDES:END -->
+  </main>
+
+  <div class="deck-controls">
+    <button id="nav-prev" class="icon-button" type="button" aria-label="Previous slide" aria-keyshortcuts="ArrowLeft" title="Previous slide (Left arrow)">
+      <!-- Lucide: chevron-left -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span id="slide-counter" aria-live="polite">1 / 1</span>
+    <button id="nav-next" class="icon-button" type="button" aria-label="Next slide" aria-keyshortcuts="ArrowRight" title="Next slide (Right arrow)">
+      <!-- Lucide: chevron-right -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <span class="key-hint" aria-hidden="true">O overview &middot; N notes</span>
+  </div>
+
+  <div class="overview" id="overview" role="dialog" aria-modal="true" aria-label="Slide overview">
+    <div class="overview-head">
+      <h2>Overview</h2>
+      <p>Enter jumps to a slide &middot; Esc closes</p>
+    </div>
+    <div class="overview-grid" id="overview-grid"></div>
+  </div>
+
+  <aside class="notes-panel" id="notes-panel" role="region" aria-label="Speaker notes" aria-live="polite"></aside>
+
+  <script>
+    (function () {
+      // Theme bootstrap — same pattern as skill-style-guide's template:
+      // stored preference wins, otherwise honour the OS scheme on first visit.
+      const root = document.documentElement;
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.setAttribute('data-theme', stored ?? (prefersDark ? 'dark' : 'light'));
+      document.getElementById('theme-toggle')?.addEventListener('click', () => {
+        const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+      });
+
+      // ---------------------------------------------------------------
+      // Deck engine
+      // ---------------------------------------------------------------
+      const stage = document.getElementById('stage');
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const counter = document.getElementById('slide-counter');
+      const prevBtn = document.getElementById('nav-prev');
+      const nextBtn = document.getElementById('nav-next');
+      const overview = document.getElementById('overview');
+      const overviewGrid = document.getElementById('overview-grid');
+      const notesPanel = document.getElementById('notes-panel');
+      const DESIGN_W = 1280;
+      const DESIGN_H = 720;
+      let current = 0;
+
+      // Scale the 1280x720 stage to fit the viewport (letterboxing on
+      // mismatched aspect ratios) and shift it up when the notes panel is open.
+      function fit() {
+        const notesH = document.body.classList.contains('notes-open')
+          ? notesPanel.getBoundingClientRect().height : 0;
+        const scale = Math.min(window.innerWidth / DESIGN_W, (window.innerHeight - notesH) / DESIGN_H);
+        stage.style.setProperty('--deck-scale', String(scale));
+        stage.style.setProperty('--notes-shift', (notesH / 2) + 'px');
+      }
+
+      function slideLabel(slide, i) {
+        const heading = slide.querySelector('h1, h2, h3');
+        return slide.dataset.title || (heading ? heading.textContent.trim() : 'Slide ' + (i + 1));
+      }
+
+      function goTo(n, opts = {}) {
+        current = Math.max(0, Math.min(slides.length - 1, n));
+        slides.forEach((s, i) => s.classList.toggle('is-current', i === current));
+        counter.textContent = (current + 1) + ' / ' + slides.length;
+        prevBtn.disabled = current === 0;
+        nextBtn.disabled = current === slides.length - 1;
+        if (opts.updateHash !== false) {
+          history.replaceState(null, '', '#/' + slides[current].id);
+        }
+        syncNotes();
+        syncOverview();
+      }
+      const next = () => goTo(current + 1);
+      const prev = () => goTo(current - 1);
+
+      function parseHash(hash) {
+        const m = /^#\/(slide-\d+)$/.exec(hash || '');
+        if (!m) return null;
+        const idx = slides.findIndex((s) => s.id === m[1]);
+        return idx >= 0 ? idx : null;
+      }
+
+      // Overview grid — one keyboard-focusable card per slide.
+      slides.forEach((slide, i) => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'ov-card';
+        const num = document.createElement('span');
+        num.className = 'ov-num';
+        num.textContent = String(i + 1).padStart(2, '0');
+        const title = document.createElement('span');
+        title.className = 'ov-title';
+        title.textContent = slideLabel(slide, i);
+        card.append(num, title);
+        card.addEventListener('click', () => { goTo(i); toggleOverview(false); });
+        overviewGrid.append(card);
+      });
+      const cards = Array.from(overviewGrid.children);
+
+      function syncOverview() {
+        cards.forEach((c, i) => {
+          if (i === current) c.setAttribute('aria-current', 'true');
+          else c.removeAttribute('aria-current');
+        });
+      }
+
+      function toggleOverview(force) {
+        const open = force ?? !document.body.classList.contains('overview-open');
+        document.body.classList.toggle('overview-open', open);
+        if (open) cards[current]?.focus();
+        else stage.focus({ preventScroll: true });
+      }
+
+      function syncNotes() {
+        if (!document.body.classList.contains('notes-open')) return;
+        const notes = slides[current].querySelector('.notes');
+        notesPanel.innerHTML = '<span class="notes-label">Notes &mdash; slide ' + (current + 1) + '</span>'
+          + (notes ? notes.innerHTML : '<p class="notes-empty">No notes for this slide.</p>');
+      }
+
+      function toggleNotes() {
+        document.body.classList.toggle('notes-open');
+        syncNotes();
+        fit();
+      }
+
+      prevBtn.addEventListener('click', prev);
+      nextBtn.addEventListener('click', next);
+
+      document.addEventListener('keydown', (e) => {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const key = e.key;
+        if (key === 'Escape' || key === 'o' || key === 'O') {
+          e.preventDefault();
+          toggleOverview();
+          return;
+        }
+        if (document.body.classList.contains('overview-open')) return;
+        // Don't hijack Space/Enter when a button or link has focus.
+        if ((key === ' ' || key === 'Enter') && e.target.closest('button, a, input, select, textarea')) return;
+        switch (key) {
+          case 'ArrowRight':
+          case 'PageDown':
+            e.preventDefault(); next(); break;
+          case ' ':
+            e.preventDefault(); e.shiftKey ? prev() : next(); break;
+          case 'ArrowLeft':
+          case 'PageUp':
+            e.preventDefault(); prev(); break;
+          case 'Home':
+            e.preventDefault(); goTo(0); break;
+          case 'End':
+            e.preventDefault(); goTo(slides.length - 1); break;
+          case 'n':
+          case 'N':
+            toggleNotes(); break;
+        }
+      });
+
+      window.addEventListener('hashchange', () => {
+        const idx = parseHash(location.hash);
+        if (idx !== null) goTo(idx, { updateHash: false });
+      });
+      window.addEventListener('resize', fit);
+
+      fit();
+      goTo(parseHash(location.hash) ?? 0);
+    })();
+  </script>
+</body>
+</html>

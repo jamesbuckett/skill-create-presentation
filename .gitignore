@@ -1,0 +1,25 @@
+# Skill eval artifacts (transient outputs from skill-creator runs)
+.claude/skills/skill-html-to-presentation-workspace/
+
+# Build / dependency outputs
+node_modules/
+package-lock.json
+package.json
+
+# Workflow outputs regenerated per run (only appear here during development
+# self-tests — in consumer projects they are the deliverable, not ignored)
+screenshots/
+outline.json
+presentation.html
+
+# Eval run reports (timestamped per run)
+evals/results/
+
+# Scratch directory used by the skill's own self-tests
+tmp/
+
+# Editor / OS noise
+.DS_Store
+.vscode/
+.idea/
+*.swp
